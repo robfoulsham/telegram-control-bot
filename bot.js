@@ -8,15 +8,15 @@ app.use(express.json());
 
 const bot = new TelegramBot(process.env.TELEGRAM_BOT_TOKEN);
 const ALLOWED_CHAT_ID = parseInt(process.env.ALLOWED_CHAT_ID);
-const RODING_INSTANCE_ID = process.env.RODING_EC2_INSTANCE_ID;
+const FAILOVER_INSTANCE_ID = process.env.FAILOVER_EC2_INSTANCE_ID;
 
 // Helpers to wrap AWS calls and send messages
-async function checkRodingFailover(chatId, instanceId) {
+async function checkFailover(chatId, instanceId) {
   const status = await getInstanceStatus(instanceId);
   bot.sendMessage(chatId, `EC2 instance ${instanceId} is currently: ${status}`);
 }
 
-async function startRodingFailover(chatId, instanceId) {
+async function startFailover(chatId, instanceId) {
   const result = await startInstance(instanceId);
   if (result.success) {
     bot.sendMessage(chatId, `EC2 instance ${instanceId} is starting...`);
@@ -25,7 +25,7 @@ async function startRodingFailover(chatId, instanceId) {
   }
 }
 
-async function stopRodingFailover(chatId, instanceId) {
+async function stopFailover(chatId, instanceId) {
   const result = await stopInstance(instanceId);
   if (result.success) {
     bot.sendMessage(chatId, `EC2 instance ${instanceId} is stopping...`);
@@ -45,9 +45,9 @@ app.post(`/webhook/xyz123`, async (req, res) => {
       const mainMenu = {
         reply_markup: {
           inline_keyboard: [
-            [{ text: "Start Roding Failover", callback_data: 'start_roding' }],
-            [{ text: "Stop Roding Failover", callback_data: 'stop_roding' }],
-            [{ text: "Check Roding Failover Status", callback_data: 'check_roding' }],
+            [{ text: "Start Home Failover", callback_data: 'start_failover' }],
+            [{ text: "Stop Home Failover", callback_data: 'stop_failover' }],
+            [{ text: "Check Home Failover Status", callback_data: 'check_failover' }],
           ]
         }
       };
@@ -58,14 +58,14 @@ app.post(`/webhook/xyz123`, async (req, res) => {
   if (update.callback_query && update.callback_query.from.id === ALLOWED_CHAT_ID) {
     const msg = update.callback_query.message;
     switch (update.callback_query.data) {
-      case 'start_roding':
-        await startRodingFailover(msg.chat.id, RODING_INSTANCE_ID);
+      case 'start_failover':
+        await startFailover(msg.chat.id, RODING_INSTANCE_ID);
         break;
-      case 'stop_roding':
-        await stopRodingFailover(msg.chat.id, RODING_INSTANCE_ID);
+      case 'stop_failover':
+        await stopFailover(msg.chat.id, RODING_INSTANCE_ID);
         break;
-      case 'check_roding':
-        await checkRodingFailover(msg.chat.id, RODING_INSTANCE_ID);
+      case 'check_failover':
+        await checkFailover(msg.chat.id, RODING_INSTANCE_ID);
         break;
     }
   }
@@ -75,7 +75,7 @@ app.post(`/webhook/xyz123`, async (req, res) => {
 
 // Health endpoint
 app.get('/health', async (req, res) => {
-  const status = await getInstanceStatus(RODING_INSTANCE_ID);
+  const status = await getInstanceStatus(FAILOVER_INSTANCE_ID);
   res.status(200).json({ status: 'ok', ec2: status });
 });
 
