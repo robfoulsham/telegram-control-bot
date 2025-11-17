@@ -59,13 +59,13 @@ app.post(`/webhook/xyz123`, async (req, res) => {
     const msg = update.callback_query.message;
     switch (update.callback_query.data) {
       case 'start_failover':
-        await startFailover(msg.chat.id, RODING_INSTANCE_ID);
+        await startFailover(msg.chat.id, FAILOVER_INSTANCE_ID);
         break;
       case 'stop_failover':
-        await stopFailover(msg.chat.id, RODING_INSTANCE_ID);
+        await stopFailover(msg.chat.id, FAILOVER_INSTANCE_ID);
         break;
       case 'check_failover':
-        await checkFailover(msg.chat.id, RODING_INSTANCE_ID);
+        await checkFailover(msg.chat.id, FAILOVER_INSTANCE_ID);
         break;
     }
   }
