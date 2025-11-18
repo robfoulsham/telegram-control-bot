@@ -2,7 +2,6 @@ import dotenv from "dotenv";
 dotenv.config();
 
 import express from "express";
-import TelegramBot from "node-telegram-bot-api";
 import { startInstance, stopInstance, getInstanceStatus } from "./aws.js";
 
 import {
@@ -11,11 +10,15 @@ import {
   disableRule
 } from "./eventBridgeClient.js";
 
+import TelegramBot from 'node-telegram-bot-api';
+import { TelegramClient } from './telegram-client.js';
+
+const bot = new TelegramBot(process.env.TELEGRAM_BOT_TOKEN);
+const tg = new TelegramClient(bot);
 
 const app = express();
 app.use(express.json());
 
-const bot = new TelegramBot(process.env.TELEGRAM_BOT_TOKEN);
 const ALLOWED_CHAT_ID = parseInt(process.env.ALLOWED_CHAT_ID);
 const FAILOVER_INSTANCE_ID = process.env.FAILOVER_EC2_INSTANCE_ID;
 const FAILOVER_EVENTBRIDGE_NAME = 'server-failover-every-minute';
@@ -25,17 +28,20 @@ async function checkFailover(chatId, instanceId) {
   console.log('Checking failover')
   const status = await getInstanceStatus(instanceId);
   const ruleState = await getRuleState(FAILOVER_EVENTBRIDGE_NAME);
-  bot.sendMessage(chatId, `EC2 instance ${instanceId} is currently: ${status}.`);
-  bot.sendMessage(chatId, `Event Bridge rule is ${ruleState}`);
+  await tg.clearMessages();
+  await tg.sendMessage(chatId, `EC2 instance ${instanceId} is currently: ${status}.`);
+  await tg.sendMessage(chatId, `Event Bridge rule is ${ruleState}`);
 }
 
 async function startFailover(chatId, instanceId) {
   console.log('Starting failover')
   const result = await startInstance(instanceId);
   if (result.success) {
-    bot.sendMessage(chatId, `EC2 instance ${instanceId} is starting...`);
+    await tg.clearMessages();
+    await tg.sendMessage(chatId, `EC2 instance ${instanceId} is starting...`);
   } else {
-    bot.sendMessage(chatId, `Error starting instance: ${result.error.message}`);
+    await tg.clearMessages();
+    await tg.sendMessage(chatId, `Error starting instance: ${result.error.message}`);
   }
 }
 
@@ -43,9 +49,11 @@ async function stopFailover(chatId, instanceId) {
   console.log('Stopping failover')
   const result = await stopInstance(instanceId);
   if (result.success) {
-    bot.sendMessage(chatId, `EC2 instance ${instanceId} is stopping...`);
+    await tg.clearMessages();
+    await tg.sendMessage(chatId, `EC2 instance ${instanceId} is stopping...`);
   } else {
-    bot.sendMessage(chatId, `Error stopping instance: ${result.error.message}`);
+    await tg.clearMessages();
+    await tg.sendMessage(chatId, `Error stopping instance: ${result.error.message}`);
   }
 }
 
@@ -53,10 +61,12 @@ async function enableAutoFailover(chatId) {
   console.log('Enabling auto failover');
   const result = await enableRule(FAILOVER_EVENTBRIDGE_NAME);
   if (result) {
-    bot.sendMessage(chatId, 'Successfully enabled Event Bridge rule');
+    await tg.clearMessages();
+    await tg.sendMessage(chatId, 'Successfully enabled Event Bridge rule');
   } else {
     console.log('issue: ', result)
-    bot.sendMessage(chatId, 'Issue while enabling Event Bridge Rule');
+    await tg.clearMessages();
+    await tg.sendMessage(chatId, 'Issue while enabling Event Bridge Rule');
   }
 }
 
@@ -64,10 +74,12 @@ async function disableAutoFailover(chatId) {
   console.log('Disabling auto failover');
   const result = await disableRule(FAILOVER_EVENTBRIDGE_NAME);
   if (result) {
-    bot.sendMessage(chatId, 'Successfully disabled Event Bridge rule');
+    await tg.clearMessages();
+    await tg.sendMessage(chatId, 'Successfully disabled Event Bridge rule');
   } else {
     console.log('issue: ', result)
-    bot.sendMessage(chatId, 'Issue while disabling Event Bridge Rule');
+    await tg.clearMessages();
+    await tg.sendMessage(chatId, 'Issue while disabling Event Bridge Rule');
   }
 }
 
@@ -90,7 +102,8 @@ app.post(`/webhook/xyz123`, async (req, res) => {
           ]
         }
       };
-      bot.sendMessage(chatId, "Welcome! Choose a command:", mainMenu);
+      await tg.clearMessages();
+      await tg.sendPersistentMessage(chatId, "Welcome! Choose a command:", mainMenu);
     }
   }
 
