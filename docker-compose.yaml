@@ -15,6 +15,5 @@ services:
     restart: unless-stopped
     environment:
       - TUNNEL_TOKEN=${CLOUDFLARE_TUNNEL_TOKEN}
-      - TUNNEL_HOSTNAME=${CLOUDFLARE_TUNNEL_HOSTNAME}
     depends_on:
       - telegram-bot

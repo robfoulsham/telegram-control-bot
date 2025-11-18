@@ -1,35 +1,24 @@
-const AWS = require('aws-sdk');
-const ec2 = new AWS.EC2({ region: process.env.AWS_REGION });
+import {
+  EC2Client,
+  StartInstancesCommand,
+  StopInstancesCommand,
+  DescribeInstancesCommand
+} from "@aws-sdk/client-ec2";
 
-async function startInstance(instanceId) {
-  try {
-    await ec2.startInstances({ InstanceIds: [instanceId] }).promise();
-    return { success: true };
-  } catch (err) {
-    return { success: false, error: err };
-  }
+const ec2 = new EC2Client({
+  region: process.env.AWS_REGION
+});
+
+
+export async function startInstance(instanceId) {
+  await ec2.send(new StartInstancesCommand({ InstanceIds: [instanceId] }));
 }
 
-async function stopInstance(instanceId) {
-  try {
-    await ec2.stopInstances({ InstanceIds: [instanceId] }).promise();
-    return { success: true };
-  } catch (err) {
-    return { success: false, error: err };
-  }
+export async function stopInstance(instanceId) {
+  await ec2.send(new StopInstancesCommand({ InstanceIds: [instanceId] }));
 }
 
-async function getInstanceStatus(instanceId) {
-  try {
-    const result = await ec2.describeInstances({ InstanceIds: [instanceId] }).promise();
-    return result.Reservations[0].Instances[0].State.Name; // "running", "stopped", etc.
-  } catch (err) {
-    return 'unknown';
-  }
+export async function getInstanceStatus(instanceId) {
+  const res = await ec2.send(new DescribeInstancesCommand({ InstanceIds: [instanceId] }));
+  return res.Reservations[0].Instances[0].State.Name;
 }
-
-module.exports = {
-  startInstance,
-  stopInstance,
-  getInstanceStatus
-};
