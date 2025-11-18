@@ -33,27 +33,33 @@ async function checkFailover(chatId, instanceId) {
   await tg.sendMessage(chatId, `Event Bridge rule is ${ruleState}`);
 }
 
-async function startFailover(chatId, instanceId) {
-  console.log('Starting failover')
+export async function startFailover(chatId, instanceId) {
+  console.log('Starting failover');
   const result = await startInstance(instanceId);
+
+  await tg.clearMessages();
+  await tg.sendMessage('Starting failover...');
+
   if (result.success) {
-    await tg.clearMessages();
-    await tg.sendMessage(chatId, `EC2 instance ${instanceId} is starting...`);
+    await tg.sendMessage(chatId, `EC2 instance ${instanceId} is ${result.currentState} (was: ${result.previousState})`
+    );
   } else {
-    await tg.clearMessages();
-    await tg.sendMessage(chatId, `Error starting instance: ${result.error.message}`);
+    await tg.sendMessage(chatId, `Error starting instance: ${result.error?.message || 'unknown error'}`
+    );
   }
 }
 
-async function stopFailover(chatId, instanceId) {
-  console.log('Stopping failover')
+export async function stopFailover(chatId, instanceId) {
+  console.log('Stopping failover');
   const result = await stopInstance(instanceId);
+
+  await tg.clearMessages();
+  await tg.sendMessage('Stopping failover...');
+
   if (result.success) {
-    await tg.clearMessages();
-    await tg.sendMessage(chatId, `EC2 instance ${instanceId} is stopping...`);
+    await tg.sendMessage(chatId, `EC2 instance ${instanceId} is ${result.currentState} (was: ${result.previousState})`);
   } else {
-    await tg.clearMessages();
-    await tg.sendMessage(chatId, `Error stopping instance: ${result.error.message}`);
+    await tg.sendMessage(chatId, `Error stopping instance: ${result.error?.message || 'unknown error'}`);
   }
 }
 
