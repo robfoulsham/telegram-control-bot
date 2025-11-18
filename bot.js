@@ -38,7 +38,7 @@ export async function startFailover(chatId, instanceId) {
   const result = await startInstance(instanceId);
 
   await tg.clearMessages();
-  await tg.sendMessage('Starting failover...');
+  await tg.sendMessage(chatId, 'Starting failover...');
 
   if (result.success) {
     await tg.sendMessage(chatId, `EC2 instance ${instanceId} is ${result.currentState} (was: ${result.previousState})`
@@ -54,7 +54,7 @@ export async function stopFailover(chatId, instanceId) {
   const result = await stopInstance(instanceId);
 
   await tg.clearMessages();
-  await tg.sendMessage('Stopping failover...');
+  await tg.sendMessage(chatId, 'Stopping failover...');
 
   if (result.success) {
     await tg.sendMessage(chatId, `EC2 instance ${instanceId} is ${result.currentState} (was: ${result.previousState})`);
