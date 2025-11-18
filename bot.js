@@ -25,8 +25,8 @@ async function checkFailover(chatId, instanceId) {
   console.log('Checking failover')
   const status = await getInstanceStatus(instanceId);
   const ruleState = await getRuleState(FAILOVER_EVENTBRIDGE_NAME);
-  bot.sendMessage(chatId, `EC2 instance ${instanceId} is currently: ${status}. 
-    Event Bridge rule is ${ruleState}`);
+  bot.sendMessage(chatId, `EC2 instance ${instanceId} is currently: ${status}.`);
+  bot.sendMessage(chatId, `Event Bridge rule is ${ruleState}`);
 }
 
 async function startFailover(chatId, instanceId) {
